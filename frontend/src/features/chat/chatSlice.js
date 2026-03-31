@@ -120,6 +120,12 @@ const chatSlice = createSlice({
       .addCase(fetchConversations.fulfilled, (state, action) => {
         state.loading = false
         state.conversations = action.payload
+        // Load unread counts from backend
+        action.payload.forEach(conv => {
+          if (conv.unread_count !== undefined && conv.id !== state.activeConversationId) {
+            state.unreadCounts[conv.id] = conv.unread_count
+          }
+        })
       })
       .addCase(fetchConversations.rejected, (state, action) => {
         state.loading = false
@@ -131,6 +137,8 @@ const chatSlice = createSlice({
       .addCase(fetchMessages.fulfilled, (state, action) => {
         state.messagesLoading = false
         state.messages[action.payload.conversationId] = action.payload.messages
+        // Backend resets unread when messages are fetched
+        state.unreadCounts[action.payload.conversationId] = 0
       })
       .addCase(fetchMessages.rejected, (state, action) => {
         state.messagesLoading = false

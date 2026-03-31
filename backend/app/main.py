@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect, text
 from app.core.config import settings
 from app.db.session import engine, Base
 from app.api.auth.routes import router as auth_router
@@ -12,6 +13,14 @@ import app.models  # noqa: F401
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Auto-migrate: add missing columns
+with engine.connect() as conn:
+    inspector = inspect(engine)
+    columns = [col["name"] for col in inspector.get_columns("conversation_participants")]
+    if "unread_count" not in columns:
+        conn.execute(text("ALTER TABLE conversation_participants ADD COLUMN unread_count INTEGER DEFAULT 0"))
+        conn.commit()
 
 app = FastAPI(
     title=settings.APP_NAME,

@@ -68,6 +68,9 @@ def get_user_conversations(db: Session, user_id: int) -> list[dict]:
 
     result = []
     for conv in conversations:
+        # Get current user's participant record for unread count
+        current_participant = next((p for p in conv.participants if p.user_id == user_id), None)
+        
         participants = [
             {"id": p.user.id, "username": p.user.username, "display_name": p.user.display_name,
              "is_online": p.user.is_online, "avatar_url": p.user.avatar_url}
@@ -103,6 +106,7 @@ def get_user_conversations(db: Session, user_id: int) -> list[dict]:
             "updated_at": conv.updated_at.isoformat(),
             "participants": participants,
             "last_message": last_message,
+            "unread_count": current_participant.unread_count if current_participant else 0,
         })
 
     return result
@@ -120,6 +124,10 @@ def get_conversation_messages(db: Session, conversation_id: int, user_id: int, l
     )
     if not participant:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this conversation")
+
+    # Reset unread count when user reads messages
+    participant.unread_count = 0
+    db.commit()
 
     messages = (
         db.query(Message)
@@ -169,6 +177,12 @@ def create_message(
     conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if conv:
         conv.updated_at = datetime.utcnow()
+
+    # Increment unread count for all participants except sender
+    db.query(ConversationParticipant).filter(
+        ConversationParticipant.conversation_id == conversation_id,
+        ConversationParticipant.user_id != sender_id,
+    ).update({ConversationParticipant.unread_count: ConversationParticipant.unread_count + 1})
 
     db.commit()
     db.refresh(message)

@@ -222,7 +222,7 @@ export default function ChatWindow() {
 
       {/* Input Area */}
       <div className="px-4 py-3 bg-surface-100/60 backdrop-blur-sm border-t border-glass-border">
-        <div className="flex items-end gap-3">
+        <div className="flex items-center gap-3">
           <div className="flex-1 relative">
             <textarea
               ref={inputRef}
@@ -238,7 +238,7 @@ export default function ChatWindow() {
           <button
             onClick={handleSend}
             disabled={!input.trim()}
-            className="p-3 bg-gradient-accent disabled:opacity-30 disabled:cursor-not-allowed rounded-xl text-white transition-all duration-300 flex-shrink-0 hover:shadow-glow hover:scale-105 active:scale-95 disabled:hover:shadow-none disabled:hover:scale-100"
+            className="h-[46px] w-[46px] flex items-center justify-center bg-gradient-accent disabled:opacity-30 disabled:cursor-not-allowed rounded-xl text-white transition-all duration-300 flex-shrink-0 hover:shadow-glow hover:scale-105 active:scale-95 disabled:hover:shadow-none disabled:hover:scale-100"
           >
             <Send size={18} />
           </button>

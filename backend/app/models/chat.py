@@ -24,6 +24,7 @@ class ConversationParticipant(Base):
     conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     joined_at = Column(DateTime, default=datetime.utcnow)
+    unread_count = Column(Integer, default=0)
 
     conversation = relationship("Conversation", back_populates="participants")
     user = relationship("User")
