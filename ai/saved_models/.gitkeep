@@ -1,0 +1,4 @@
+# Placeholder for saved model files
+# After training in notebooks, save models here:
+# - smart_reply/model.pt, smart_reply/vocab.json
+# - toxicity/model.pt, toxicity/vocab.json
