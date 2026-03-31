@@ -35,7 +35,7 @@ class Vocabulary:
         text = re.sub(r"[^a-zA-Z0-9\s'?!.,]", "", text)
         return text.split()
 
-    def encode(self, text: str, max_len: int = 50) -> list[int]:
+    def encode(self, text: str, max_len: int = 30) -> list[int]:
         tokens = self.tokenize(text)
         ids = [self.word2idx.get(t, self.word2idx[self.UNK_TOKEN]) for t in tokens[:max_len - 2]]
         ids = [self.word2idx[self.SOS_TOKEN]] + ids + [self.word2idx[self.EOS_TOKEN]]

@@ -1,6 +1,3 @@
-import os
-import json
-import numpy as np
 from pathlib import Path
 from app.core.config import settings
 
@@ -10,9 +7,9 @@ class AIService:
 
     def __init__(self):
         self.model_dir = Path(settings.MODEL_DIR)
-        self._smart_reply_model = None
-        self._toxicity_model = None
-        self._models_loaded = False
+        self._smart_reply_predictor = None
+        self._toxicity_predictor = None
+        self._summarization_predictor = None
 
     def _ensure_models_dir(self):
         self.model_dir.mkdir(parents=True, exist_ok=True)
@@ -20,9 +17,10 @@ class AIService:
     def get_smart_replies(self, messages: list[str], num_replies: int = 3) -> list[str]:
         """Generate smart reply suggestions based on recent messages."""
         try:
-            from ai.smart_reply.inference.predict import SmartReplyPredictor
-            predictor = SmartReplyPredictor(str(self.model_dir / "smart_reply"))
-            return predictor.predict(messages, num_replies=num_replies)
+            if self._smart_reply_predictor is None:
+                from ai.smart_reply.inference.predict import SmartReplyPredictor
+                self._smart_reply_predictor = SmartReplyPredictor(str(self.model_dir / "smart_reply"))
+            return self._smart_reply_predictor.predict(messages, num_replies=num_replies)
         except Exception:
             # Fallback: rule-based replies when model isn't available
             return self._fallback_smart_replies(messages)
@@ -54,9 +52,10 @@ class AIService:
     def check_toxicity(self, text: str) -> dict:
         """Check if text is toxic."""
         try:
-            from ai.toxicity.inference.predict import ToxicityPredictor
-            predictor = ToxicityPredictor(str(self.model_dir / "toxicity"))
-            return predictor.predict(text)
+            if self._toxicity_predictor is None:
+                from ai.toxicity.inference.predict import ToxicityPredictor
+                self._toxicity_predictor = ToxicityPredictor(str(self.model_dir / "toxicity"))
+            return self._toxicity_predictor.predict(text)
         except Exception:
             return self._fallback_toxicity(text)
 
@@ -79,9 +78,10 @@ class AIService:
     def summarize_chat(self, messages: list[str], num_sentences: int = 5) -> str:
         """Summarize a list of chat messages."""
         try:
-            from ai.summarization.inference.predict import SummarizationPredictor
-            predictor = SummarizationPredictor(str(self.model_dir / "summarization"))
-            return predictor.predict(messages, num_sentences=num_sentences)
+            if self._summarization_predictor is None:
+                from ai.summarization.inference.predict import SummarizationPredictor
+                self._summarization_predictor = SummarizationPredictor(str(self.model_dir / "summarization"))
+            return self._summarization_predictor.predict(messages, num_sentences=num_sentences)
         except Exception:
             return self._fallback_summarize(messages, num_sentences)
 

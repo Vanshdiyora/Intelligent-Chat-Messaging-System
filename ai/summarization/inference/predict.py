@@ -1,4 +1,3 @@
-from pathlib import Path
 from ai.summarization.model.textrank import TextRankSummarizer
 
 

@@ -32,7 +32,7 @@ class SmartReplyPredictor:
     def predict(self, messages: list[str], num_replies: int = 3, max_len: int = 30) -> list[str]:
         """Generate reply suggestions given a list of recent messages."""
         context = " ".join(messages[-3:])  # Use last 3 messages as context
-        input_ids = torch.tensor([self.vocab.encode(context)]).to(self.device)
+        input_ids = torch.tensor([self.vocab.encode(context, max_len=30)]).to(self.device)
 
         replies = []
         for _ in range(num_replies):
