@@ -7,6 +7,9 @@ from app.api.chat.routes import router as chat_router
 from app.api.ai.routes import router as ai_router
 from app.websockets.chat_ws import router as ws_router
 
+# Import all models so Base.metadata knows about them
+import app.models  # noqa: F401
+
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
