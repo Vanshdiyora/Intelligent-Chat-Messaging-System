@@ -54,7 +54,7 @@ class SmartReplyPredictor:
                 output, hidden, cell = self.model.decoder(input_token, hidden, cell)
                 # Add temperature sampling for diversity
                 probs = torch.softmax(output / 0.8, dim=-1)
-                next_token = torch.multinomial(probs, 1).squeeze()
+                next_token = torch.multinomial(probs, 1).squeeze(-1)
                 token_id = next_token.item()
 
                 if token_id == self.vocab.word2idx[Vocabulary.EOS_TOKEN]:

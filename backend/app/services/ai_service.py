@@ -1,5 +1,8 @@
 from pathlib import Path
 from app.core.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class AIService:
@@ -20,8 +23,10 @@ class AIService:
             if self._smart_reply_predictor is None:
                 from ai.smart_reply.inference.predict import SmartReplyPredictor
                 self._smart_reply_predictor = SmartReplyPredictor(str(self.model_dir / "smart_reply"))
+                logger.info("Smart reply model loaded successfully")
             return self._smart_reply_predictor.predict(messages, num_replies=num_replies)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Smart reply model failed: {e}")
             # Fallback: rule-based replies when model isn't available
             return self._fallback_smart_replies(messages)
 
@@ -55,8 +60,10 @@ class AIService:
             if self._toxicity_predictor is None:
                 from ai.toxicity.inference.predict import ToxicityPredictor
                 self._toxicity_predictor = ToxicityPredictor(str(self.model_dir / "toxicity"))
+                logger.info("Toxicity model loaded successfully")
             return self._toxicity_predictor.predict(text)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Toxicity model failed: {e}")
             return self._fallback_toxicity(text)
 
     def _fallback_toxicity(self, text: str) -> dict:
@@ -81,8 +88,10 @@ class AIService:
             if self._summarization_predictor is None:
                 from ai.summarization.inference.predict import SummarizationPredictor
                 self._summarization_predictor = SummarizationPredictor(str(self.model_dir / "summarization"))
+                logger.info("Summarization model loaded successfully")
             return self._summarization_predictor.predict(messages, num_sentences=num_sentences)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Summarization model failed: {e}")
             return self._fallback_summarize(messages, num_sentences)
 
     def _fallback_summarize(self, messages: list[str], num_sentences: int = 5) -> str:
