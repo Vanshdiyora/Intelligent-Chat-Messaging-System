@@ -26,12 +26,6 @@ node_modules/
 dist/
 build/
 
-# AI model artifacts
-ai/saved_models/*.pt
-ai/saved_models/*.pth
-ai/saved_models/*.bin
-ai/saved_models/*.pkl
-
 # Jupyter
 .ipynb_checkpoints/
 

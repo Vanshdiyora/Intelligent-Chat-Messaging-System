@@ -4,12 +4,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+
 
 class AIService:
     """Service that loads and runs AI models for smart reply, toxicity detection, and summarization."""
 
     def __init__(self):
-        self.model_dir = Path(settings.MODEL_DIR)
+        model_dir = Path(settings.MODEL_DIR)
+        if not model_dir.is_absolute():
+            model_dir = PROJECT_ROOT / model_dir
+        self.model_dir = model_dir
         self._smart_reply_predictor = None
         self._toxicity_predictor = None
         self._summarization_predictor = None
