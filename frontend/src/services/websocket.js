@@ -5,11 +5,13 @@ class WebSocketClient {
     this.maxReconnectAttempts = 5
     this.reconnectDelay = 2000
     this.handlers = {}
+    this.intentionalClose = false
   }
 
   connect(token) {
     if (this.ws?.readyState === WebSocket.OPEN) return
 
+    this.intentionalClose = false
     const wsBase = import.meta.env.VITE_WS_URL
     if (wsBase) {
       this.ws = new WebSocket(`${wsBase}/ws/${token}`)
@@ -35,7 +37,7 @@ class WebSocketClient {
 
     this.ws.onclose = (event) => {
       this._emit('disconnected')
-      if (event.code !== 4001 && this.reconnectAttempts < this.maxReconnectAttempts) {
+      if (!this.intentionalClose && event.code !== 4001 && this.reconnectAttempts < this.maxReconnectAttempts) {
         this.reconnectAttempts++
         setTimeout(() => this.connect(token), this.reconnectDelay * this.reconnectAttempts)
       }
@@ -47,6 +49,7 @@ class WebSocketClient {
   }
 
   disconnect() {
+    this.intentionalClose = true
     if (this.ws) {
       this.ws.close()
       this.ws = null

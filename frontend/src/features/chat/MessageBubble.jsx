@@ -2,8 +2,15 @@ import { format } from 'date-fns'
 import ToxicityBadge from '../../components/ToxicityBadge'
 import Avatar from '../../components/Avatar'
 
+function parseUTC(dateStr) {
+  if (!dateStr) return new Date()
+  // Ensure the backend UTC timestamp is parsed as UTC
+  if (!dateStr.endsWith('Z') && !dateStr.includes('+')) return new Date(dateStr + 'Z')
+  return new Date(dateStr)
+}
+
 export default function MessageBubble({ message, isMine, showAvatar }) {
-  const time = format(new Date(message.created_at), 'HH:mm')
+  const time = format(parseUTC(message.created_at), 'HH:mm')
 
   return (
     <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} animate-slide-up`}>

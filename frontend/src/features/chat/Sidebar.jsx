@@ -9,6 +9,12 @@ import LoadingSpinner from '../../components/LoadingSpinner'
 import { Search, Plus, LogOut, X, MessageSquare } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
+function parseUTC(dateStr) {
+  if (!dateStr) return new Date()
+  if (!dateStr.endsWith('Z') && !dateStr.includes('+')) return new Date(dateStr + 'Z')
+  return new Date(dateStr)
+}
+
 export default function Sidebar() {
   const dispatch = useDispatch()
   const { conversations, activeConversationId, loading, unreadCounts } = useSelector((state) => state.chat)
@@ -202,7 +208,7 @@ export default function Sidebar() {
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                       {lastMsg && (
                         <span className="text-[11px] text-chat-muted">
-                          {formatDistanceToNow(new Date(lastMsg.created_at), { addSuffix: false })}
+                          {formatDistanceToNow(parseUTC(lastMsg.created_at), { addSuffix: false })}
                         </span>
                       )}
                       {unreadCount > 0 && (
