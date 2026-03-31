@@ -15,12 +15,14 @@
     color: #eae9fc;
     overflow: hidden;
     height: 100vh;
+    height: 100dvh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   #root {
     height: 100vh;
+    height: 100dvh;
   }
 
   ::selection {

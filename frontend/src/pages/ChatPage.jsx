@@ -17,7 +17,7 @@ export default function ChatPage() {
   }, [dispatch])
 
   return (
-    <div className="flex h-screen bg-surface overflow-hidden">
+    <div className="flex h-[100dvh] bg-surface overflow-hidden">
       {/* Sidebar — full width on mobile, fixed width on md+ */}
       <div className={`${activeConversationId ? 'hidden md:flex' : 'flex'} w-full md:w-[360px] md:min-w-[300px] flex-shrink-0`}>
         <Sidebar />
