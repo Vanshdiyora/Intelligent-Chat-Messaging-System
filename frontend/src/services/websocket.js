@@ -10,9 +10,14 @@ class WebSocketClient {
   connect(token) {
     if (this.ws?.readyState === WebSocket.OPEN) return
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.host
-    this.ws = new WebSocket(`${protocol}//${host}/ws/${token}`)
+    const wsBase = import.meta.env.VITE_WS_URL
+    if (wsBase) {
+      this.ws = new WebSocket(`${wsBase}/ws/${token}`)
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const host = window.location.host
+      this.ws = new WebSocket(`${protocol}//${host}/ws/${token}`)
+    }
 
     this.ws.onopen = () => {
       this.reconnectAttempts = 0
