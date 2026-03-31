@@ -59,7 +59,6 @@ export default function ChatWindow() {
     const text = input.trim()
     if (!text || !activeConversationId) return
 
-    dispatch(sendMessage({ conversationId: activeConversationId, content: text }))
     wsClient.sendMessage(activeConversationId, text)
     setInput('')
     dispatch(clearSmartReplies())
@@ -94,9 +93,9 @@ export default function ChatWindow() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col h-full bg-surface animate-fade-in">
       {/* Chat Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-chat-panel border-b border-chat-border">
+      <div className="flex items-center justify-between px-5 py-3 bg-surface-100/60 backdrop-blur-sm border-b border-glass-border relative z-20">
         <div className="flex items-center gap-3">
           <Avatar
             name={chatName}
@@ -105,37 +104,45 @@ export default function ChatWindow() {
             isOnline={otherParticipant?.is_online}
           />
           <div>
-            <h2 className="font-medium text-chat-text text-[15px]">{chatName}</h2>
-            <p className="text-xs text-chat-muted">
+            <h2 className="font-medium text-chat-text text-[14px]">{chatName}</h2>
+            <p className="text-[11px]">
               {typingNames.length > 0
-                ? `${typingNames.join(', ')} typing...`
-                : otherParticipant?.is_online
-                  ? 'online'
-                  : 'offline'}
+                ? <span className="text-accent-light flex items-center gap-1">
+                    <span className="flex gap-0.5">
+                      <span className="w-1 h-1 bg-accent-light rounded-full animate-typing-dot" />
+                      <span className="w-1 h-1 bg-accent-light rounded-full animate-typing-dot" style={{ animationDelay: '0.2s' }} />
+                      <span className="w-1 h-1 bg-accent-light rounded-full animate-typing-dot" style={{ animationDelay: '0.4s' }} />
+                    </span>
+                    {typingNames.join(', ')} typing
+                  </span>
+                : <span className={otherParticipant?.is_online ? 'text-emerald-400' : 'text-chat-muted'}>
+                    {otherParticipant?.is_online ? 'online' : 'offline'}
+                  </span>}
             </p>
           </div>
         </div>
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 rounded-full hover:bg-chat-hover text-chat-muted hover:text-chat-text transition-colors"
+            className="btn-ghost"
           >
-            <MoreVertical size={20} />
+            <MoreVertical size={18} />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 w-56 bg-chat-panel border border-chat-border rounded-lg shadow-xl z-50 animate-fade-in">
+            <div className="absolute right-0 top-full mt-2 w-52 bg-surface-200 border border-glass-border rounded-xl shadow-2xl z-50 animate-scale-in overflow-hidden">
               <button
                 onClick={handleSummarize}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-chat-text hover:bg-chat-hover transition-colors rounded-t-lg"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-chat-text hover:bg-glass-hover transition-all duration-200"
               >
-                <FileText size={16} />
+                <FileText size={15} className="text-accent-light" />
                 Summarize Chat
               </button>
+              <div className="h-px bg-glass-border" />
               <button
                 onClick={() => { dispatch(clearSummary()); setShowMenu(false) }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-chat-text hover:bg-chat-hover transition-colors rounded-b-lg"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-chat-text hover:bg-glass-hover transition-all duration-200"
               >
-                <Sparkles size={16} />
+                <Sparkles size={15} className="text-accent-light" />
                 Clear Summary
               </button>
             </div>
@@ -150,37 +157,44 @@ export default function ChatWindow() {
 
       {/* Messages Area */}
       <div
-        className="flex-1 overflow-y-auto px-16 py-4 bg-chat-bg"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
+        className="flex-1 overflow-y-auto px-6 md:px-16 py-5 bg-surface relative"
         onClick={() => setShowMenu(false)}
       >
-        {chatMessages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-chat-muted animate-fade-in">
-              <Sparkles size={40} strokeWidth={1} className="mx-auto mb-3" />
-              <p className="text-sm">No messages yet. Say hello! 👋</p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {chatMessages.map((msg, index) => {
-              const isMine = msg.sender_id === user?.id
-              const showAvatar = index === 0 || chatMessages[index - 1]?.sender_id !== msg.sender_id
+        {/* Subtle background grid */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(124,58,237,0.3) 1px, transparent 0)',
+          backgroundSize: '40px 40px',
+        }} />
 
-              return (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  isMine={isMine}
-                  showAvatar={showAvatar}
-                />
-              )
-            })}
-            <div ref={messagesEndRef} />
-          </div>
-        )}
+        <div className="relative">
+          {chatMessages.length === 0 ? (
+            <div className="flex items-center justify-center h-full min-h-[60vh]">
+              <div className="text-center text-chat-muted animate-fade-in">
+                <div className="inline-flex p-4 bg-surface-200/50 rounded-2xl border border-glass-border mb-4">
+                  <Sparkles size={32} strokeWidth={1} className="text-accent-light/50" />
+                </div>
+                <p className="text-sm">No messages yet. Say hello!</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {chatMessages.map((msg, index) => {
+                const isMine = msg.sender_id === user?.id
+                const showAvatar = index === 0 || chatMessages[index - 1]?.sender_id !== msg.sender_id
+
+                return (
+                  <MessageBubble
+                    key={msg.id}
+                    message={msg}
+                    isMine={isMine}
+                    showAvatar={showAvatar}
+                  />
+                )
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Smart Replies */}
@@ -194,15 +208,20 @@ export default function ChatWindow() {
 
       {/* Typing indicator */}
       {typingNames.length > 0 && (
-        <div className="px-16 py-1 bg-chat-bg">
-          <span className="text-xs text-chat-accent italic animate-pulse-soft">
-            {typingNames.join(', ')} is typing...
+        <div className="px-6 md:px-16 py-1.5 bg-surface">
+          <span className="text-xs text-accent-light/70 italic flex items-center gap-1.5">
+            <span className="flex gap-0.5">
+              <span className="w-1 h-1 bg-accent-light rounded-full animate-typing-dot" />
+              <span className="w-1 h-1 bg-accent-light rounded-full animate-typing-dot" style={{ animationDelay: '0.2s' }} />
+              <span className="w-1 h-1 bg-accent-light rounded-full animate-typing-dot" style={{ animationDelay: '0.4s' }} />
+            </span>
+            {typingNames.join(', ')} is typing
           </span>
         </div>
       )}
 
       {/* Input Area */}
-      <div className="px-4 py-3 bg-chat-panel border-t border-chat-border">
+      <div className="px-4 py-3 bg-surface-100/60 backdrop-blur-sm border-t border-glass-border">
         <div className="flex items-end gap-3">
           <div className="flex-1 relative">
             <textarea
@@ -210,18 +229,18 @@ export default function ChatWindow() {
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Type a message"
+              placeholder="Type a message..."
               rows={1}
-              className="w-full px-4 py-2.5 bg-chat-input rounded-lg text-sm text-chat-text placeholder-chat-muted focus:outline-none resize-none max-h-32 overflow-y-auto"
-              style={{ minHeight: '42px' }}
+              className="w-full px-4 py-3 bg-surface-200/80 border border-glass-border rounded-xl text-sm text-chat-text placeholder-chat-muted/50 focus:outline-none focus:border-accent/30 focus:ring-2 focus:ring-accent/5 transition-all duration-300 resize-none max-h-32 overflow-y-auto"
+              style={{ minHeight: '46px' }}
             />
           </div>
           <button
             onClick={handleSend}
             disabled={!input.trim()}
-            className="p-2.5 bg-chat-accent hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-full text-white transition-colors flex-shrink-0"
+            className="p-3 bg-gradient-accent disabled:opacity-30 disabled:cursor-not-allowed rounded-xl text-white transition-all duration-300 flex-shrink-0 hover:shadow-glow hover:scale-105 active:scale-95 disabled:hover:shadow-none disabled:hover:scale-100"
           >
-            <Send size={20} />
+            <Send size={18} />
           </button>
         </div>
       </div>

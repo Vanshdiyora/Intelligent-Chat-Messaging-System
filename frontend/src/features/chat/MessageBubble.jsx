@@ -17,15 +17,15 @@ export default function MessageBubble({ message, isMine, showAvatar }) {
 
         {/* Bubble */}
         <div
-          className={`relative px-3 py-2 rounded-lg shadow-sm ${
+          className={`relative px-3.5 py-2.5 shadow-sm transition-all duration-200 ${
             isMine
-              ? 'bg-chat-bubble-sent bubble-sent text-white'
-              : 'bg-chat-bubble-received bubble-received text-chat-text'
-          } ${showAvatar ? (isMine ? 'rounded-tr-none' : 'rounded-tl-none') : ''}`}
+              ? 'bg-gradient-to-br from-accent to-purple-600 bubble-sent text-white rounded-2xl rounded-br-md'
+              : 'bg-surface-200/80 border border-glass-border bubble-received text-chat-text rounded-2xl rounded-bl-md'
+          }`}
         >
           {/* Sender name for group chats */}
           {showAvatar && !isMine && (
-            <p className="text-xs font-medium text-chat-accent mb-0.5">
+            <p className="text-xs font-medium text-accent-light mb-0.5">
               {message.sender_username}
             </p>
           )}
@@ -44,7 +44,7 @@ export default function MessageBubble({ message, isMine, showAvatar }) {
 
           {/* Timestamp */}
           <div className={`flex items-center gap-1 mt-1 ${isMine ? 'justify-end' : 'justify-start'}`}>
-            <span className={`text-[11px] ${isMine ? 'text-white/60' : 'text-chat-muted'}`}>
+            <span className={`text-[11px] ${isMine ? 'text-white/50' : 'text-chat-muted'}`}>
               {time}
             </span>
           </div>

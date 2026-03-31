@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.core.security import get_current_user
 from app.models.user import User
+from app.models.chat import ConversationParticipant
 from app.schemas.chat import ConversationCreate, MessageCreate
 from app.services.chat_service import (
     create_conversation,
@@ -10,17 +11,54 @@ from app.services.chat_service import (
     get_conversation_messages,
     create_message,
 )
+from app.websockets.connection_manager import manager
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
 
 @router.post("/conversations")
-def create_new_conversation(
+async def create_new_conversation(
     data: ConversationCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     conversation = create_conversation(db, current_user.id, data)
+
+    # Get all participants and notify them about the new conversation
+    participants = (
+        db.query(ConversationParticipant)
+        .filter(ConversationParticipant.conversation_id == conversation.id)
+        .all()
+    )
+    participant_ids = [p.user_id for p in participants]
+
+    participant_details = []
+    for p in participants:
+        user = db.query(User).filter(User.id == p.user_id).first()
+        if user:
+            participant_details.append({
+                "id": user.id,
+                "username": user.username,
+                "display_name": user.display_name,
+                "is_online": user.is_online,
+                "avatar_url": user.avatar_url,
+            })
+
+    ws_message = {
+        "type": "new_conversation",
+        "conversation": {
+            "id": conversation.id,
+            "name": conversation.name,
+            "is_group": conversation.is_group,
+            "created_at": conversation.created_at.isoformat(),
+            "updated_at": conversation.updated_at.isoformat(),
+            "participants": participant_details,
+            "last_message": None,
+        },
+    }
+
+    await manager.broadcast_to_conversation(ws_message, participant_ids, exclude_id=current_user.id)
+
     return {"id": conversation.id, "name": conversation.name, "is_group": conversation.is_group}
 
 

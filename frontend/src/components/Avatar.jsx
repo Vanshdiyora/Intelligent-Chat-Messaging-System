@@ -18,8 +18,8 @@ export default function Avatar({ name, url, size = 'md', isOnline = false }) {
     : '?'
 
   const colors = [
-    'bg-emerald-600', 'bg-blue-600', 'bg-purple-600', 'bg-pink-600',
-    'bg-amber-600', 'bg-cyan-600', 'bg-rose-600', 'bg-indigo-600',
+    'bg-violet-600', 'bg-indigo-600', 'bg-purple-600', 'bg-fuchsia-600',
+    'bg-blue-600', 'bg-sky-600', 'bg-rose-600', 'bg-pink-600',
   ]
   const colorIndex = name ? name.charCodeAt(0) % colors.length : 0
 
@@ -29,18 +29,18 @@ export default function Avatar({ name, url, size = 'md', isOnline = false }) {
         <img
           src={url}
           alt={name}
-          className={`${sizeClasses[size]} rounded-full object-cover`}
+          className={`${sizeClasses[size]} rounded-full object-cover ring-2 ring-glass-border`}
         />
       ) : (
         <div
-          className={`${sizeClasses[size]} ${colors[colorIndex]} rounded-full flex items-center justify-center font-semibold text-white`}
+          className={`${sizeClasses[size]} ${colors[colorIndex]} rounded-full flex items-center justify-center font-semibold text-white ring-2 ring-white/10`}
         >
           {initials}
         </div>
       )}
       {isOnline && (
         <span
-          className={`absolute bottom-0 right-0 ${dotSizeClasses[size]} bg-green-500 rounded-full border-2 border-chat-sidebar`}
+          className={`absolute bottom-0 right-0 ${dotSizeClasses[size]} bg-emerald-400 rounded-full border-2 border-surface-50`}
         />
       )}
     </div>

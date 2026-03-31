@@ -43,6 +43,7 @@ const chatSlice = createSlice({
     conversations: [],
     activeConversationId: null,
     messages: {},  // { conversationId: [messages] }
+    unreadCounts: {},  // { conversationId: count }
     typingUsers: {},  // { conversationId: { userId: username } }
     onlineUsers: {},  // { userId: boolean }
     loading: false,
@@ -52,6 +53,16 @@ const chatSlice = createSlice({
   reducers: {
     setActiveConversation: (state, action) => {
       state.activeConversationId = action.payload
+      if (action.payload) {
+        state.unreadCounts[action.payload] = 0
+      }
+    },
+    addConversation: (state, action) => {
+      const conv = action.payload
+      const exists = state.conversations.some(c => c.id === conv.id)
+      if (!exists) {
+        state.conversations.unshift(conv)
+      }
     },
     addMessage: (state, action) => {
       const msg = action.payload
@@ -69,6 +80,10 @@ const chatSlice = createSlice({
       if (conv) {
         conv.last_message = msg
         conv.updated_at = msg.created_at
+      }
+      // Increment unread count if not the active conversation
+      if (convId !== state.activeConversationId) {
+        state.unreadCounts[convId] = (state.unreadCounts[convId] || 0) + 1
       }
     },
     setUserTyping: (state, action) => {
@@ -140,6 +155,7 @@ const chatSlice = createSlice({
 
 export const {
   setActiveConversation,
+  addConversation,
   addMessage,
   setUserTyping,
   clearUserTyping,

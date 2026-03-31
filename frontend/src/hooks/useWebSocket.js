@@ -1,20 +1,36 @@
 import { useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { wsClient } from '../services/websocket'
-import { addMessage, setUserTyping, clearUserTyping, setUserOnline } from '../features/chat/chatSlice'
+import { addMessage, addConversation, setUserTyping, clearUserTyping, setUserOnline, fetchConversations } from '../features/chat/chatSlice'
 
 export function useWebSocket() {
   const dispatch = useDispatch()
   const { token } = useSelector((state) => state.auth)
+  const conversationsRef = useRef([])
   const typingTimeoutRef = useRef({})
+
+  const { conversations } = useSelector((state) => state.chat)
+  useEffect(() => {
+    conversationsRef.current = conversations
+  }, [conversations])
 
   useEffect(() => {
     if (!token) return
 
     wsClient.connect(token)
 
+    const unsubNewConv = wsClient.on('new_conversation', (data) => {
+      dispatch(addConversation(data.conversation))
+    })
+
     const unsubMessage = wsClient.on('new_message', (data) => {
-      dispatch(addMessage(data.message))
+      const msg = data.message
+      dispatch(addMessage(msg))
+      // If message is for a conversation we don't have yet, fetch conversations
+      const knownConv = conversationsRef.current.some(c => c.id === msg.conversation_id)
+      if (!knownConv) {
+        dispatch(fetchConversations())
+      }
     })
 
     const unsubTyping = wsClient.on('typing', (data) => {
@@ -35,6 +51,7 @@ export function useWebSocket() {
     })
 
     return () => {
+      unsubNewConv()
       unsubMessage()
       unsubTyping()
       unsubStatus()
