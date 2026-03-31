@@ -18,11 +18,13 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen bg-surface overflow-hidden">
-      {/* Sidebar with glass effect */}
-      <Sidebar />
+      {/* Sidebar — full width on mobile, fixed width on md+ */}
+      <div className={`${activeConversationId ? 'hidden md:flex' : 'flex'} w-full md:w-[360px] md:min-w-[300px] flex-shrink-0`}>
+        <Sidebar />
+      </div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 relative">
+      {/* Main Chat Area — hidden on mobile when no conversation selected */}
+      <div className={`${activeConversationId ? 'flex' : 'hidden md:flex'} flex-1 flex-col min-w-0 relative`}>
         {activeConversationId ? (
           <ChatWindow />
         ) : (
@@ -38,8 +40,8 @@ export default function ChatPage() {
               }
               title="ChatSmart"
               subtitle={
-                <span className="flex items-center gap-2 justify-center">
-                  <Sparkles size={14} className="text-accent-light" />
+                <span className="flex items-center gap-2 justify-center text-center px-4">
+                  <Sparkles size={14} className="text-accent-light flex-shrink-0" />
                   Send messages with AI-powered smart replies, toxicity detection & chat summaries
                 </span>
               }

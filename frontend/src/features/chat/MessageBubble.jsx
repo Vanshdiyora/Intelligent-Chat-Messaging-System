@@ -14,7 +14,7 @@ export default function MessageBubble({ message, isMine, showAvatar }) {
 
   return (
     <div className={`flex ${isMine ? 'justify-end' : 'justify-start'} animate-slide-up`}>
-      <div className={`flex gap-2 max-w-[65%] ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`flex gap-2 max-w-[85%] md:max-w-[65%] ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
         {/* Avatar */}
         <div className="flex-shrink-0 w-8">
           {showAvatar && !isMine && (

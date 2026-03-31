@@ -74,7 +74,7 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="w-[360px] min-w-[300px] bg-surface-50 border-r border-glass-border flex flex-col h-full relative">
+    <div className="w-full bg-surface-50 border-r border-glass-border flex flex-col h-full relative">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-glass-border bg-surface-100/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">

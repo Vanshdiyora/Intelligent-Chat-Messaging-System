@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { sendMessage } from './chatSlice'
+import { sendMessage, setActiveConversation } from './chatSlice'
 import { fetchSmartReplies, clearSmartReplies, summarizeChat, clearSummary } from '../ai/aiSlice'
 import { wsClient } from '../../services/websocket'
 import Avatar from '../../components/Avatar'
@@ -9,7 +9,7 @@ import ToxicityBadge from '../../components/ToxicityBadge'
 import MessageBubble from './MessageBubble'
 import SmartReplies from './SmartReplies'
 import SummaryPanel from './SummaryPanel'
-import { Send, Sparkles, FileText, MoreVertical, AlertTriangle } from 'lucide-react'
+import { Send, Sparkles, FileText, MoreVertical, AlertTriangle, ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default function ChatWindow() {
@@ -95,8 +95,14 @@ export default function ChatWindow() {
   return (
     <div className="flex-1 flex flex-col h-full bg-surface animate-fade-in">
       {/* Chat Header */}
-      <div className="flex items-center justify-between px-5 py-3 bg-surface-100/60 backdrop-blur-sm border-b border-glass-border relative z-20">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-3 md:px-5 py-3 bg-surface-100/60 backdrop-blur-sm border-b border-glass-border relative z-20">
+        <div className="flex items-center gap-2 md:gap-3">
+          <button
+            onClick={() => dispatch(setActiveConversation(null))}
+            className="btn-ghost md:hidden flex-shrink-0"
+          >
+            <ArrowLeft size={20} />
+          </button>
           <Avatar
             name={chatName}
             url={otherParticipant?.avatar_url}
@@ -157,7 +163,7 @@ export default function ChatWindow() {
 
       {/* Messages Area */}
       <div
-        className="flex-1 overflow-y-auto px-6 md:px-16 py-5 bg-surface relative"
+        className="flex-1 overflow-y-auto px-3 md:px-16 py-5 bg-surface relative"
         onClick={() => setShowMenu(false)}
       >
         {/* Subtle background grid */}
@@ -208,7 +214,7 @@ export default function ChatWindow() {
 
       {/* Typing indicator */}
       {typingNames.length > 0 && (
-        <div className="px-6 md:px-16 py-1.5 bg-surface">
+        <div className="px-3 md:px-16 py-1.5 bg-surface">
           <span className="text-xs text-accent-light/70 italic flex items-center gap-1.5">
             <span className="flex gap-0.5">
               <span className="w-1 h-1 bg-accent-light rounded-full animate-typing-dot" />
