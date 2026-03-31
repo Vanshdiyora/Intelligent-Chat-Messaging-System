@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchConversations } from '../features/chat/chatSlice'
+import { fetchConversations, setActiveConversation } from '../features/chat/chatSlice'
 import { useWebSocket } from '../hooks/useWebSocket'
 import Sidebar from '../features/chat/Sidebar'
 import ChatWindow from '../features/chat/ChatWindow'
@@ -10,11 +10,32 @@ import { MessageSquare, Sparkles } from 'lucide-react'
 export default function ChatPage() {
   const dispatch = useDispatch()
   const { activeConversationId } = useSelector((state) => state.chat)
+  const prevActiveRef = useRef(activeConversationId)
   useWebSocket()
 
   useEffect(() => {
     dispatch(fetchConversations())
   }, [dispatch])
+
+  // Push a history entry when a conversation is opened on mobile,
+  // so the hardware back button returns to the sidebar instead of leaving the app.
+  useEffect(() => {
+    if (activeConversationId && !prevActiveRef.current) {
+      window.history.pushState({ chatOpen: true }, '')
+    }
+    prevActiveRef.current = activeConversationId
+  }, [activeConversationId])
+
+  const handlePopState = useCallback((e) => {
+    if (activeConversationId) {
+      dispatch(setActiveConversation(null))
+    }
+  }, [activeConversationId, dispatch])
+
+  useEffect(() => {
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [handlePopState])
 
   return (
     <div className="flex h-[100dvh] bg-surface overflow-hidden">
