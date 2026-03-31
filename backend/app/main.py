@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Add project root to Python path so 'ai' module can be imported
+PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text

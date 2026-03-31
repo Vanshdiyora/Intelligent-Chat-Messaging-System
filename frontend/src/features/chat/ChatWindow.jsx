@@ -99,9 +99,9 @@ export default function ChatWindow() {
         <div className="flex items-center gap-2 md:gap-3">
           <button
             onClick={() => dispatch(setActiveConversation(null))}
-            className="btn-ghost md:hidden flex-shrink-0"
+            className="md:hidden flex-shrink-0 p-2 rounded-xl text-chat-text hover:bg-glass-hover transition-all duration-200"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={22} />
           </button>
           <Avatar
             name={chatName}
