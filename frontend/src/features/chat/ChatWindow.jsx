@@ -14,7 +14,7 @@ import { format } from 'date-fns'
 
 export default function ChatWindow() {
   const dispatch = useDispatch()
-  const { activeConversationId, conversations, messages, typingUsers } = useSelector((state) => state.chat)
+  const { activeConversationId, conversations, messages, typingUsers, messagesLoading } = useSelector((state) => state.chat)
   const { user } = useSelector((state) => state.auth)
   const { smartReplies, smartReplyLoading, summary, showSummary, summaryLoading } = useSelector((state) => state.ai)
 
@@ -173,7 +173,11 @@ export default function ChatWindow() {
         }} />
 
         <div className="relative">
-          {chatMessages.length === 0 ? (
+          {messagesLoading ? (
+            <div className="flex items-center justify-center h-full min-h-[60vh]">
+              <LoadingSpinner />
+            </div>
+          ) : chatMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[60vh]">
               <div className="text-center text-chat-muted animate-fade-in">
                 <div className="inline-flex p-4 bg-surface-200/50 rounded-2xl border border-glass-border mb-4">
