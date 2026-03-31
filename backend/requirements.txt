@@ -8,8 +8,8 @@ pydantic==2.5.2
 pydantic-settings==2.1.0
 python-multipart==0.0.6
 websockets==12.0
-torch==2.1.1
 --extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.6.0+cpu
 numpy==1.26.2
 nltk==3.8.1
 aiosqlite==0.19.0
