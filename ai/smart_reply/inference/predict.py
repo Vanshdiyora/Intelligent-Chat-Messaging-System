@@ -45,13 +45,13 @@ class SmartReplyPredictor:
 
     def _generate(self, src: torch.Tensor, max_len: int = 30) -> list[int]:
         with torch.no_grad():
-            _, hidden, cell = self.model.encoder(src)
+            encoder_outputs, hidden, cell = self.model.encoder(src)
 
             input_token = torch.tensor([self.vocab.word2idx[Vocabulary.SOS_TOKEN]]).to(self.device)
             generated = []
 
             for _ in range(max_len):
-                output, hidden, cell = self.model.decoder(input_token, hidden, cell)
+                output, hidden, cell, _ = self.model.decoder(input_token, hidden, cell, encoder_outputs)
                 # Add temperature sampling for diversity
                 probs = torch.softmax(output / 0.8, dim=-1)
                 next_token = torch.multinomial(probs, 1).squeeze(-1)
