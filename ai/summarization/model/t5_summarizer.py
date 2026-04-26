@@ -22,7 +22,7 @@ class T5Summarizer:
     def load(self):
         """Initialize the Gradio client."""
         logger.info(f"Connecting to HuggingFace Space: {HF_SPACE}")
-        self.client = Client(HF_SPACE, hf_token=HF_TOKEN)
+        self.client = Client(HF_SPACE)
         logger.info("Gradio client connected")
 
     def summarize(self, text: str, **kwargs) -> str:
