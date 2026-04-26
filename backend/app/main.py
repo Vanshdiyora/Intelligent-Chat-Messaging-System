@@ -53,6 +53,20 @@ app.include_router(ai_router)
 app.include_router(ws_router)
 
 
+@app.on_event("startup")
+async def preload_models():
+    """Preload AI models at startup so first request doesn't timeout."""
+    import logging
+    from app.services.ai_service import ai_service
+    logger = logging.getLogger(__name__)
+    try:
+        logger.info("Preloading summarization model...")
+        ai_service.summarize_chat(["test"], num_sentences=1)
+        logger.info("Summarization model preloaded successfully")
+    except Exception as e:
+        logger.warning(f"Summarization model preload failed (will retry on first request): {e}")
+
+
 @app.get("/")
 def health_check():
     return {"status": "ok", "app": settings.APP_NAME}

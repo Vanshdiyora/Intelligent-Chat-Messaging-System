@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# ── Your Hugging Face model repo (private) ──
+# ── Your Hugging Face model repo (public) ──
 HF_REPO_ID = os.environ.get("SUMMARIZATION_HF_REPO", "vanshdiyora/chat-summary")
 HF_TOKEN = os.environ.get("HF_TOKEN", None)
 
