@@ -1,8 +1,14 @@
+import os
 import torch
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+from pathlib import Path
+from transformers import T5ForConditionalGeneration, AutoTokenizer
 import logging
 
 logger = logging.getLogger(__name__)
+
+# ── Your Hugging Face model repo (private) ──
+HF_REPO_ID = os.environ.get("SUMMARIZATION_HF_REPO", "vanshdiyora/chat-summary")
+HF_TOKEN = os.environ.get("HF_TOKEN", None)
 
 
 class T5Summarizer:
@@ -10,6 +16,10 @@ class T5Summarizer:
 
     Loads a T5 model fine-tuned on SAMSum (chat → summary pairs)
     and generates abstractive summaries for chat conversations.
+
+    Loading priority:
+        1. Local model_dir (if model files exist there)
+        2. Hugging Face Hub (HF_REPO_ID) — downloaded & cached automatically
     """
 
     def __init__(self, model_dir: str):
@@ -21,14 +31,33 @@ class T5Summarizer:
         self.max_input_length = 512
         self.max_target_length = 128
 
+    def _local_model_exists(self) -> bool:
+        """Check if model weight files exist locally."""
+        model_path = Path(self.model_dir)
+        if not model_path.exists():
+            return False
+        weight_files = list(model_path.glob("model.safetensors")) + list(model_path.glob("pytorch_model.bin"))
+        return len(weight_files) > 0
+
     def load(self):
-        """Load the fine-tuned T5 model and tokenizer."""
-        logger.info(f"Loading T5 summarization model from {self.model_dir}")
-        self.tokenizer = T5Tokenizer.from_pretrained(self.model_dir, legacy=False)
-        self.model = T5ForConditionalGeneration.from_pretrained(self.model_dir)
+        """Load the fine-tuned T5 model and tokenizer.
+
+        Tries local path first; falls back to Hugging Face Hub.
+        """
+        if self._local_model_exists():
+            source = self.model_dir
+            logger.info(f"Loading T5 summarization model from local path: {source}")
+        else:
+            source = HF_REPO_ID
+            logger.info(f"Local model not found at {self.model_dir}. "
+                        f"Downloading from Hugging Face Hub: {source}")
+
+        token = HF_TOKEN if source == HF_REPO_ID else None
+        self.tokenizer = AutoTokenizer.from_pretrained(source, token=token)
+        self.model = T5ForConditionalGeneration.from_pretrained(source, token=token)
         self.model.to(self.device)
         self.model.eval()
-        logger.info(f"T5 summarization model loaded on {self.device}")
+        logger.info(f"T5 summarization model loaded on {self.device} (source: {source})")
 
     def summarize(self, text: str, num_beams: int = 4, length_penalty: float = 1.0) -> str:
         """Generate an abstractive summary for the given text.
