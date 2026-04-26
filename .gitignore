@@ -37,8 +37,4 @@ Thumbs.db
 *.log
 
 # AI Model weights (too large for GitHub — download separately)
-ai/saved_models/smart_reply/model.pt
-ai/saved_models/summarization/model.safetensors
-ai/saved_models/toxicity/model.pt
-*.pt
-*.safetensors
+ai/saved_models/summarization/
