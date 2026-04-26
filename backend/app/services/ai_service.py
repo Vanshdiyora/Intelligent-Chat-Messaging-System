@@ -88,7 +88,7 @@ class AIService:
         }
 
     def summarize_chat(self, messages: list[str], num_sentences: int = 5) -> str:
-        """Summarize a list of chat messages."""
+        """Summarize a list of chat messages using fine-tuned T5."""
         try:
             if self._summarization_predictor is None:
                 from ai.summarization.inference.predict import SummarizationPredictor
@@ -97,37 +97,7 @@ class AIService:
             return self._summarization_predictor.predict(messages, num_sentences=num_sentences)
         except Exception as e:
             logger.warning(f"Summarization model failed: {e}")
-            return self._fallback_summarize(messages, num_sentences)
-
-    def _fallback_summarize(self, messages: list[str], num_sentences: int = 5) -> str:
-        """Extractive summarization fallback using simple TextRank-like scoring."""
-        if not messages:
-            return "No messages to summarize."
-
-        if len(messages) <= num_sentences:
-            return " ".join(messages)
-
-        # Simple frequency-based scoring
-        all_text = " ".join(messages).lower()
-        words = all_text.split()
-        word_freq = {}
-        for word in words:
-            word = word.strip(".,!?;:'\"")
-            if len(word) > 3:
-                word_freq[word] = word_freq.get(word, 0) + 1
-
-        # Score each message
-        scored = []
-        for i, msg in enumerate(messages):
-            msg_words = msg.lower().split()
-            score = sum(word_freq.get(w.strip(".,!?;:'\""), 0) for w in msg_words)
-            # Boost recent messages slightly
-            score *= (1 + i / len(messages) * 0.3)
-            scored.append((score, i, msg))
-
-        scored.sort(reverse=True)
-        top = sorted(scored[:num_sentences], key=lambda x: x[1])
-        return " ".join(item[2] for item in top)
+            return "Summarization model is not available. Please ensure the T5 model files are in ai/saved_models/summarization/."
 
 
 # Singleton instance

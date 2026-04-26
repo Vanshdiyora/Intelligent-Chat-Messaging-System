@@ -49,8 +49,8 @@ A real-time chat application with integrated AI/ML features — smart replies, t
 │   │   ├── model/           # LSTM classifier definition
 │   │   ├── inference/       # Prediction logic
 │   │   └── utils/           # Vocabulary helpers
-│   ├── summarization/       # TextRank extractive summarizer
-│   │   ├── model/           # TextRank algorithm
+│   ├── summarization/       # T5 abstractive summarizer
+│   │   ├── model/           # Fine-tuned T5 model
 │   │   └── inference/       # Prediction logic
 │   ├── common/              # Shared preprocessing & evaluation metrics
 │   └── saved_models/        # Trained model weights & vocab files
@@ -170,10 +170,10 @@ The app works without trained models — rule-based fallbacks are used automatic
 - **Training:** `notebooks/toxicity_training.ipynb`
 
 #### Chat Summarization
-- **Model:** TextRank extractive summarization
-- **Function:** Summarizes long conversation threads into key sentences
-- **Fallback:** Returns the most recent messages
-- **Notebook:** `notebooks/summarization_textrank.ipynb`
+- **Model:** Fine-tuned T5-small (abstractive summarization)
+- **Dataset:** SAMSum (chat → summary pairs)
+- **Function:** Generates abstractive summaries of conversation threads
+- **Training:** `notebooks/summarization_t5_training.ipynb`
 
 ### Authentication
 - JWT-based authentication with bcrypt password hashing
