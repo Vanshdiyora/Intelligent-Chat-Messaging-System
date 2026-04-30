@@ -1,0 +1,7 @@
+# Drop trained model artifacts here:
+#   - model.pt    (PyTorch state dict produced by notebooks/toxicity_training.ipynb)
+#   - vocab.json  (vocabulary mapping)
+#
+# When both files are present AND `torch` is installed, the backend will
+# automatically use the trained LSTM classifier instead of the rule-based
+# detector in ai_service._fallback_toxicity.

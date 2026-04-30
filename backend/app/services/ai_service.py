@@ -72,19 +72,84 @@ class AIService:
             return self._fallback_toxicity(text)
 
     def _fallback_toxicity(self, text: str) -> dict:
-        """Rule-based fallback toxicity check."""
-        toxic_words = [
-            "hate", "kill", "stupid", "idiot", "dumb", "ugly",
-            "loser", "shut up", "die", "worst", "terrible",
-        ]
-        text_lower = text.lower()
-        toxic_count = sum(1 for word in toxic_words if word in text_lower)
-        score = min(toxic_count * 0.25, 1.0)
+        """Rule-based toxicity detector.
+
+        Used whenever the trained LSTM model isn't available (e.g. weights
+        missing or torch not installed in the runtime). Combines a curated
+        profanity wordlist (`better_profanity`, ~1500 entries) with simple
+        heuristics: profane-token density, ALL-CAPS shouting, and
+        character-repetition obfuscation (e.g. "loooser", "suuuck").
+        """
+        import re
+
+        try:
+            from shared.constants import TOXICITY_THRESHOLD
+        except Exception:
+            TOXICITY_THRESHOLD = 0.7
+
+        if not text or not text.strip():
+            return {"is_toxic": False, "confidence": 1.0, "label": "non-toxic"}
+
+        # Tokens of word characters + apostrophes; preserve original case
+        # so we can detect shouting.
+        raw_tokens = re.findall(r"[A-Za-z']+", text)
+        if not raw_tokens:
+            return {"is_toxic": False, "confidence": 1.0, "label": "non-toxic"}
+
+        score = 0.0
+        try:
+            from better_profanity import profanity
+
+            # Per-token check catches single profane words; whole-text check
+            # handles multi-word phrases the library knows about.
+            profane_hits = sum(
+                1 for tok in raw_tokens if profanity.contains_profanity(tok)
+            )
+            whole_hit = profanity.contains_profanity(text)
+            density = profane_hits / len(raw_tokens)
+
+            if profane_hits > 0:
+                # Strong signal: 0.80 baseline, scale up with density.
+                score = max(score, min(0.80 + density * 0.20, 1.0))
+            elif whole_hit:
+                score = max(score, 0.80)
+        except Exception:
+            # Last-resort minimal wordlist if the dependency isn't available.
+            minimal = {
+                "hate", "kill", "stupid", "idiot", "dumb", "ugly", "loser",
+                "die", "worst", "moron", "trash", "scum", "freak",
+            }
+            lower_tokens = [t.lower() for t in raw_tokens]
+            hits = sum(1 for t in lower_tokens if t in minimal)
+            if "shut up" in text.lower():
+                hits += 1
+            if hits:
+                score = max(score, min(0.55 + 0.15 * hits, 1.0))
+
+        # Heuristic: aggressive ALL-CAPS shouting on multi-word messages.
+        caps_tokens = sum(1 for t in raw_tokens if len(t) >= 3 and t.isupper())
+        if len(raw_tokens) >= 3 and caps_tokens / len(raw_tokens) >= 0.6:
+            score = max(score, 0.45)
+            if score >= 0.45:
+                score += 0.05
+
+        # Heuristic: obfuscation via repeated characters ("loooser", "f***").
+        repetition_hits = len(re.findall(r"([A-Za-z])\1{3,}", text))
+        if repetition_hits:
+            score += 0.05 * repetition_hits
+
+        # Heuristic: censored profanity ("f***", "s**t").
+        if re.search(r"[A-Za-z]\*{2,}", text):
+            score = max(score, 0.7)
+
+        score = max(0.0, min(score, 1.0))
+        is_toxic = score >= TOXICITY_THRESHOLD
+        confidence = score if is_toxic else 1.0 - score
 
         return {
-            "is_toxic": score >= 0.5,
-            "confidence": score if score >= 0.5 else 1.0 - score,
-            "label": "toxic" if score >= 0.5 else "non-toxic",
+            "is_toxic": is_toxic,
+            "confidence": round(confidence, 4),
+            "label": "toxic" if is_toxic else "non-toxic",
         }
 
     def summarize_chat(self, messages: list[str], num_sentences: int = 5) -> str:
