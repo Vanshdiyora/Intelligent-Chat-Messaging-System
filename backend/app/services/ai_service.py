@@ -90,59 +90,17 @@ class AIService:
         if not text or not text.strip():
             return {"is_toxic": False, "confidence": 1.0, "label": "non-toxic"}
 
-        # Tokens of word characters + apostrophes; preserve original case
-        # so we can detect shouting.
         raw_tokens = re.findall(r"[A-Za-z']+", text)
         if not raw_tokens:
             return {"is_toxic": False, "confidence": 1.0, "label": "non-toxic"}
 
-        score = 0.0
-        try:
-            from better_profanity import profanity
-
-            # Per-token check catches single profane words; whole-text check
-            # handles multi-word phrases the library knows about.
-            profane_hits = sum(
-                1 for tok in raw_tokens if profanity.contains_profanity(tok)
-            )
-            whole_hit = profanity.contains_profanity(text)
-            density = profane_hits / len(raw_tokens)
-
-            if profane_hits > 0:
-                # Strong signal: 0.80 baseline, scale up with density.
-                score = max(score, min(0.80 + density * 0.20, 1.0))
-            elif whole_hit:
-                score = max(score, 0.80)
-        except Exception:
-            # Last-resort minimal wordlist if the dependency isn't available.
-            minimal = {
-                "hate", "kill", "stupid", "idiot", "dumb", "ugly", "loser",
-                "die", "worst", "moron", "trash", "scum", "freak",
-            }
-            lower_tokens = [t.lower() for t in raw_tokens]
-            hits = sum(1 for t in lower_tokens if t in minimal)
-            if "shut up" in text.lower():
-                hits += 1
-            if hits:
-                score = max(score, min(0.55 + 0.15 * hits, 1.0))
-
-        # Heuristic: aggressive ALL-CAPS shouting on multi-word messages.
-        caps_tokens = sum(1 for t in raw_tokens if len(t) >= 3 and t.isupper())
-        if len(raw_tokens) >= 3 and caps_tokens / len(raw_tokens) >= 0.6:
-            score = max(score, 0.45)
-            if score >= 0.45:
-                score += 0.05
-
-        # Heuristic: obfuscation via repeated characters ("loooser", "f***").
-        repetition_hits = len(re.findall(r"([A-Za-z])\1{3,}", text))
-        if repetition_hits:
-            score += 0.05 * repetition_hits
-
-        # Heuristic: censored profanity ("f***", "s**t").
-        if re.search(r"[A-Za-z]\*{2,}", text):
-            score = max(score, 0.7)
-
+        score = max(
+            self._score_profanity(text, raw_tokens),
+            self._score_shouting(raw_tokens),
+        )
+        score += self._score_obfuscation(text)
         score = max(0.0, min(score, 1.0))
+
         is_toxic = score >= TOXICITY_THRESHOLD
         confidence = score if is_toxic else 1.0 - score
 
@@ -151,6 +109,58 @@ class AIService:
             "confidence": round(confidence, 4),
             "label": "toxic" if is_toxic else "non-toxic",
         }
+
+    @staticmethod
+    def _score_profanity(text: str, raw_tokens: list[str]) -> float:
+        """Score from curated wordlist match (0.0 - 1.0)."""
+        try:
+            from better_profanity import profanity
+        except Exception:
+            return AIService._score_minimal_wordlist(text, raw_tokens)
+
+        profane_hits = sum(
+            1 for tok in raw_tokens if profanity.contains_profanity(tok)
+        )
+        if profane_hits > 0:
+            density = profane_hits / len(raw_tokens)
+            return min(0.80 + density * 0.20, 1.0)
+        if profanity.contains_profanity(text):
+            return 0.80
+        return 0.0
+
+    @staticmethod
+    def _score_minimal_wordlist(text: str, raw_tokens: list[str]) -> float:
+        """Fallback when better_profanity isn't installed."""
+        minimal = {
+            "hate", "kill", "stupid", "idiot", "dumb", "ugly", "loser",
+            "die", "worst", "moron", "trash", "scum", "freak",
+        }
+        hits = sum(1 for t in raw_tokens if t.lower() in minimal)
+        if "shut up" in text.lower():
+            hits += 1
+        if hits == 0:
+            return 0.0
+        return min(0.55 + 0.15 * hits, 1.0)
+
+    @staticmethod
+    def _score_shouting(raw_tokens: list[str]) -> float:
+        """Score from aggressive ALL-CAPS shouting on multi-word messages."""
+        if len(raw_tokens) < 3:
+            return 0.0
+        caps_tokens = sum(1 for t in raw_tokens if len(t) >= 3 and t.isupper())
+        if caps_tokens / len(raw_tokens) >= 0.6:
+            return 0.50
+        return 0.0
+
+    @staticmethod
+    def _score_obfuscation(text: str) -> float:
+        """Score bump from character repetition or censored profanity."""
+        import re
+
+        bump = 0.05 * len(re.findall(r"([A-Za-z])\1{3,}", text))
+        if re.search(r"[A-Za-z]\*{2,}", text):
+            bump += 0.7
+        return bump
 
     def summarize_chat(self, messages: list[str], num_sentences: int = 5) -> str:
         """Summarize a list of chat messages using fine-tuned T5."""
