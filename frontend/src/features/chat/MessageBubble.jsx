@@ -28,7 +28,7 @@ export default function MessageBubble({ message, isMine, showAvatar }) {
             isMine
               ? 'bg-gradient-to-br from-accent to-purple-600 bubble-sent text-white rounded-2xl rounded-br-md'
               : 'bg-surface-200/80 border border-glass-border bubble-received text-chat-text rounded-2xl rounded-bl-md'
-          }`}
+          } ${message.is_toxic ? 'ring-2 ring-red-500/60 ring-offset-1 ring-offset-transparent' : ''}`}
         >
           {/* Sender name for group chats */}
           {showAvatar && !isMine && (
